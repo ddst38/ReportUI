@@ -26,9 +26,9 @@
       </div>
     </div>
 
-    <div class="table-container max-h-96 overflow-y-auto">
+    <div class="table-container max-h-[500px] overflow-y-auto">
       <table class="data-table">
-        <thead class="sticky top-0">
+        <thead class="sticky top-0 bg-white">
           <tr>
             <th class="cursor-pointer" @click="sort('originalName')">
               Fichier
@@ -52,7 +52,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="lib in paginatedLibraries" :key="lib.originalName + lib.sha1">
+          <tr v-for="lib in filteredLibraries" :key="lib.originalName + lib.sha1">
             <td class="font-mono">
               <span class="truncate max-w-xs block" :title="lib.originalName">
                 {{ truncate(lib.cleanedName || lib.originalName, 30) }}
@@ -80,36 +80,11 @@
         </tbody>
       </table>
     </div>
-
-    <!-- Pagination -->
-    <div v-if="totalPages > 1" class="flex items-center justify-between mt-3 text-xs text-gray-600">
-      <div>
-        Page {{ currentPage }} / {{ totalPages }}
-      </div>
-      <div class="flex space-x-1">
-        <button @click="currentPage = 1" :disabled="currentPage === 1"
-                class="px-2 py-1 border rounded disabled:opacity-50 hover:bg-gray-100">
-          «
-        </button>
-        <button @click="currentPage--" :disabled="currentPage === 1"
-                class="px-2 py-1 border rounded disabled:opacity-50 hover:bg-gray-100">
-          ‹
-        </button>
-        <button @click="currentPage++" :disabled="currentPage === totalPages"
-                class="px-2 py-1 border rounded disabled:opacity-50 hover:bg-gray-100">
-          ›
-        </button>
-        <button @click="currentPage = totalPages" :disabled="currentPage === totalPages"
-                class="px-2 py-1 border rounded disabled:opacity-50 hover:bg-gray-100">
-          »
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   libraries: {
@@ -123,13 +98,6 @@ const statusFilter = ref('')
 const scopeFilter = ref('')
 const sortKey = ref('originalName')
 const sortOrder = ref('asc')
-const currentPage = ref(1)
-const pageSize = 50
-
-// Reset page when filters change
-watch([search, statusFilter, scopeFilter], () => {
-  currentPage.value = 1
-})
 
 const filteredLibraries = computed(() => {
   let result = [...props.libraries]
@@ -164,13 +132,6 @@ const filteredLibraries = computed(() => {
   })
 
   return result
-})
-
-const totalPages = computed(() => Math.ceil(filteredLibraries.value.length / pageSize))
-
-const paginatedLibraries = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredLibraries.value.slice(start, start + pageSize)
 })
 
 function sort(key) {

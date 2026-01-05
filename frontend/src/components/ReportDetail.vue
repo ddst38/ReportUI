@@ -1,12 +1,24 @@
 <template>
   <div>
     <!-- Back button -->
-    <router-link to="/" class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 mb-4">
-      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-      </svg>
-      Retour aux rapports
-    </router-link>
+    <div class="flex items-center justify-between mb-4">
+      <router-link to="/" class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Retour aux rapports
+      </router-link>
+
+      <!-- Export PDF button -->
+      <button v-if="report" @click="exportPdf"
+              class="inline-flex items-center px-3 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors print:hidden">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Export PDF
+      </button>
+    </div>
 
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-12">
@@ -19,7 +31,7 @@
     </div>
 
     <!-- Report content -->
-    <div v-else-if="report">
+    <div v-else-if="report" id="report-content">
       <!-- Header -->
       <div class="bg-white rounded-lg shadow p-4 mb-6">
         <div class="flex items-start justify-between">
@@ -92,6 +104,11 @@
         />
       </div>
 
+      <!-- Version conflicts section -->
+      <div class="mb-6">
+        <VersionConflicts :libraries="report.libraries" />
+      </div>
+
       <!-- Libraries table -->
       <LibraryTable :libraries="report.libraries" />
     </div>
@@ -105,6 +122,7 @@ import DonutChart from '@/components/charts/DonutChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
 import RadarChart from '@/components/charts/RadarChart.vue'
 import LibraryTable from '@/components/LibraryTable.vue'
+import VersionConflicts from '@/components/VersionConflicts.vue'
 
 const props = defineProps({
   id: {
@@ -206,4 +224,17 @@ function formatDate(dateStr) {
     minute: '2-digit'
   })
 }
+
+function exportPdf() {
+  window.print()
+}
 </script>
+
+<style scoped>
+@media print {
+  :deep(.chart-panel) {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+</style>

@@ -78,3 +78,45 @@
 .progress-fill {
   @apply bg-primary-500 h-2 rounded-full transition-all duration-300;
 }
+
+/* Print styles for PDF export */
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .chart-panel {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .table-container {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .data-table th {
+    background-color: #1d4ed8 !important;
+    color: white !important;
+  }
+
+  .badge {
+    border: 1px solid currentColor;
+  }
+
+  /* Hide scrollbars */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
