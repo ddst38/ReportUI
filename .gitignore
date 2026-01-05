@@ -1,0 +1,32 @@
+# Build
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Node
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (rapports locaux)
+data/reports/*.json
+
+# Logs
+*.log
