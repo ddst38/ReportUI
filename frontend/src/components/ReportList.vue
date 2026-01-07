@@ -32,7 +32,7 @@
     <!-- Reports grid -->
     <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <div v-for="report in reports" :key="report.id"
-           class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+           :class="cardClass(report)"
            @click="goToReport(report.id)">
         <div class="p-4">
           <!-- Header -->
@@ -50,28 +50,46 @@
             </button>
           </div>
 
-          <!-- Stats -->
-          <div class="grid grid-cols-3 gap-2 mb-3">
+          <!-- Stats - Dynamic grid -->
+          <div class="grid gap-2 mb-3" :class="statsGridClass(report)">
+            <!-- Total -->
             <div class="text-center p-2 bg-gray-50 rounded">
               <div class="text-lg font-bold text-gray-700">{{ report.totalJars }}</div>
               <div class="text-xxs text-gray-500">Total</div>
             </div>
+            <!-- Résolus -->
             <div class="text-center p-2 bg-green-50 rounded">
               <div class="text-lg font-bold text-green-600">{{ report.resolved }}</div>
               <div class="text-xxs text-gray-500">Résolus</div>
             </div>
+            <!-- Non résolus - Interne -->
             <div class="text-center p-2 bg-yellow-50 rounded">
-              <div class="text-lg font-bold text-yellow-600">{{ report.unresolved }}</div>
-              <div class="text-xxs text-gray-500">Non résolus</div>
+              <div class="text-lg font-bold text-yellow-600">{{ report.unresolvedInternal || 0 }}</div>
+              <div class="text-xxs text-gray-500">Non rés. Int.</div>
+            </div>
+            <!-- Non résolus - Externe -->
+            <div class="text-center p-2 bg-red-50 rounded">
+              <div class="text-lg font-bold text-red-600">{{ report.unresolvedExternal || 0 }}</div>
+              <div class="text-xxs text-gray-500">Non rés. Ext.</div>
+            </div>
+            <!-- Provided (auto-fix) - conditionnel -->
+            <div v-if="report.providedAutoFix > 0" class="text-center p-2 bg-purple-50 rounded">
+              <div class="text-lg font-bold text-purple-600">{{ report.providedAutoFix }}</div>
+              <div class="text-xxs text-gray-500">Provided</div>
+            </div>
+            <!-- Missing - conditionnel -->
+            <div v-if="report.missingCount > 0" class="text-center p-2 bg-red-100 rounded">
+              <div class="text-lg font-bold text-red-700">{{ report.missingCount }}</div>
+              <div class="text-xxs text-gray-500">Manquants</div>
             </div>
           </div>
 
           <!-- Progress bar -->
           <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: report.successRate + '%' }"></div>
+            <div class="progress-fill" :style="{ width: getCoverageRate(report) + '%' }"></div>
           </div>
           <div class="text-right text-xxs text-gray-500 mt-1">
-            {{ report.successRate.toFixed(1) }}% de succès
+            {{ getCoverageRate(report).toFixed(1) }}% couverture
           </div>
         </div>
       </div>
@@ -152,5 +170,28 @@ async function executeDelete() {
   }
   showDeleteModal.value = false
   reportToDelete.value = null
+}
+
+function cardClass(report) {
+  const hasMissing = report.missingCount > 0 || report.compilationSuccess === false
+  return hasMissing
+    ? 'bg-red-50 border border-red-200 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+    : 'bg-blue-50 border border-blue-200 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+}
+
+function statsGridClass(report) {
+  // Calculer le nombre de colonnes en fonction des stats affichées
+  let cols = 4 // Total, Résolus, Non rés. Int., Non rés. Ext.
+  if (report.providedAutoFix > 0) cols++
+  if (report.missingCount > 0) cols++
+
+  if (cols <= 4) return 'grid-cols-4'
+  if (cols === 5) return 'grid-cols-5'
+  return 'grid-cols-6'
+}
+
+function getCoverageRate(report) {
+  // Utiliser coverageRate si disponible, sinon fallback sur successRate
+  return report.coverageRate ?? report.successRate ?? 0
 }
 </script>

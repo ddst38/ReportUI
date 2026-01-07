@@ -20,16 +20,18 @@
             <td class="font-mono">{{ conflict.artifactId }}</td>
             <td>
               <div class="flex flex-wrap gap-1">
-                <span v-for="ver in conflict.versions" :key="ver"
-                      class="badge bg-amber-100 text-amber-800">
-                  {{ ver }}
+                <span v-for="versionInfo in conflict.versionDetails" :key="versionInfo.version"
+                      :class="versionBadgeClass(versionInfo.isLoaded)">
+                  {{ versionInfo.version }}
+                  <span v-if="versionInfo.isLoaded"> ✓</span>
                 </span>
               </div>
             </td>
-            <td class="text-xs text-gray-500">
-              <div class="max-w-xs">
-                <span v-for="(file, idx) in conflict.files" :key="file">
-                  {{ file }}<span v-if="idx < conflict.files.length - 1">, </span>
+            <td class="text-xs">
+              <div class="max-w-xs flex flex-wrap gap-1">
+                <span v-for="fileInfo in conflict.fileDetails" :key="fileInfo.file"
+                      :class="fileBadgeClass(fileInfo.isLoaded)">
+                  {{ fileInfo.file }}
                 </span>
               </div>
             </td>
@@ -39,7 +41,8 @@
     </div>
 
     <p class="text-xs text-amber-600 mt-2">
-      Ces dépendances sont présentes en plusieurs versions. Vérifiez le pom.xml généré pour résoudre les conflits.
+      <strong>Vert</strong> = version chargée dans le classpath (dernière déclarée dans le POM).
+      <strong>Rouge</strong> = version non chargée.
     </p>
   </div>
 </template>
@@ -57,8 +60,9 @@ const props = defineProps({
 const conflicts = computed(() => {
   const grouped = {}
 
-  for (const lib of props.libraries) {
-    if (!lib.groupId || !lib.artifactId || !lib.version) continue
+  // Indexer toutes les bibliothèques pour retrouver leur position
+  props.libraries.forEach((lib, index) => {
+    if (!lib.groupId || !lib.artifactId || !lib.version) return
 
     const key = `${lib.groupId}:${lib.artifactId}`
     if (!grouped[key]) {
@@ -66,20 +70,76 @@ const conflicts = computed(() => {
         key,
         groupId: lib.groupId,
         artifactId: lib.artifactId,
-        versions: new Set(),
-        files: []
+        entries: []
       }
     }
-    grouped[key].versions.add(lib.version)
-    grouped[key].files.push(lib.cleanedName || lib.originalName)
-  }
+    grouped[key].entries.push({
+      version: lib.version,
+      file: lib.cleanedName || lib.originalName,
+      index: index
+    })
+  })
 
   return Object.values(grouped)
-    .filter(g => g.versions.size > 1)
-    .map(g => ({
-      ...g,
-      versions: Array.from(g.versions).sort()
-    }))
+    .filter(g => {
+      // Vérifier qu'il y a au moins 2 versions différentes
+      const uniqueVersions = new Set(g.entries.map(e => e.version))
+      return uniqueVersions.size > 1
+    })
+    .map(g => {
+      // Trouver l'entrée avec l'index le plus élevé (version chargée)
+      const maxIndex = Math.max(...g.entries.map(e => e.index))
+      const loadedEntry = g.entries.find(e => e.index === maxIndex)
+      const loadedVersion = loadedEntry?.version
+
+      // Créer les détails de versions avec indication loaded/not-loaded
+      const versionMap = new Map()
+      for (const entry of g.entries) {
+        if (!versionMap.has(entry.version)) {
+          versionMap.set(entry.version, {
+            version: entry.version,
+            isLoaded: entry.version === loadedVersion,
+            maxIndex: entry.index
+          })
+        } else {
+          // Mettre à jour maxIndex si cette version apparaît plus tard
+          const existing = versionMap.get(entry.version)
+          if (entry.index > existing.maxIndex) {
+            existing.maxIndex = entry.index
+            existing.isLoaded = entry.version === loadedVersion
+          }
+        }
+      }
+
+      // Créer les détails de fichiers avec indication loaded/not-loaded
+      const fileDetails = g.entries.map(entry => ({
+        file: entry.file,
+        version: entry.version,
+        isLoaded: entry.version === loadedVersion
+      }))
+
+      return {
+        key: g.key,
+        groupId: g.groupId,
+        artifactId: g.artifactId,
+        versionDetails: Array.from(versionMap.values()).sort((a, b) =>
+          a.version.localeCompare(b.version)
+        ),
+        fileDetails: fileDetails
+      }
+    })
     .sort((a, b) => a.key.localeCompare(b.key))
 })
+
+function versionBadgeClass(isLoaded) {
+  return isLoaded
+    ? 'badge bg-green-100 text-green-800'
+    : 'badge bg-red-100 text-red-800'
+}
+
+function fileBadgeClass(isLoaded) {
+  return isLoaded
+    ? 'px-1 py-0.5 rounded bg-green-50 text-green-700'
+    : 'px-1 py-0.5 rounded bg-red-50 text-red-700'
+}
 </script>

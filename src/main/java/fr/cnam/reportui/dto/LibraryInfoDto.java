@@ -38,7 +38,19 @@ public record LibraryInfoDto(
     String status,
 
     @Schema(description = "Bibliothèque interne CNAM", example = "false")
-    boolean isInternal
+    boolean isInternal,
+
+    @Schema(description = "Source d'identification: ARTIFACTORY, MAVEN_CENTRAL, CACHE", example = "MAVEN_CENTRAL")
+    String identificationSource,
+
+    @Schema(description = "Type de bibliothèque: internal ou external", example = "external")
+    String libraryType,
+
+    @Schema(description = "Ajoutée via --auto-fix", example = "false")
+    boolean isAutoFixProvided,
+
+    @Schema(description = "Installée localement (liblocale)", example = "false")
+    boolean isLocalInstall
 ) {
     /**
      * Retourne les coordonnées Maven au format GAV.

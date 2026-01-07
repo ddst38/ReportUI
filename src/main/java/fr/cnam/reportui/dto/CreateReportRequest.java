@@ -20,5 +20,14 @@ public record CreateReportRequest(
     StatisticsDto statistics,
 
     @Schema(description = "Liste de toutes les bibliothèques", required = true)
-    List<LibraryInfoDto> libraries
+    List<LibraryInfoDto> libraries,
+
+    @Schema(description = "Liste des JARs détectés dans le projet source")
+    List<DetectedJarDto> detectedJars,
+
+    @Schema(description = "Liste des packages manquants (si compilation échouée)")
+    List<MissingPackageDto> missingPackages,
+
+    @Schema(description = "Indique si le projet compile avec succès")
+    Boolean compilationSuccess
 ) {}

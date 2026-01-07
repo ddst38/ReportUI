@@ -32,24 +32,27 @@
 
     <!-- Report content -->
     <div v-else-if="report" id="report-content">
-      <!-- Header -->
-      <div class="bg-white rounded-lg shadow p-4 mb-6">
+      <!-- Header with dynamic coloring -->
+      <div :class="headerClass" class="rounded-lg shadow p-4 mb-6">
         <div class="flex items-start justify-between">
           <div>
             <h1 class="text-xl font-bold text-gray-900">{{ report.projectName }}</h1>
             <p class="text-sm text-gray-500 mt-1">Migration du {{ formatDate(report.migrationDate) }}</p>
+            <p v-if="report.compilationSuccess === false" class="text-sm text-red-600 mt-1 font-semibold">
+              Le projet ne compile pas
+            </p>
           </div>
           <div class="text-right">
-            <div class="text-3xl font-bold" :class="successRateColor">
-              {{ report.statistics.successRate.toFixed(1) }}%
+            <div class="text-3xl font-bold" :class="coverageRateColor">
+              {{ getCoverageRate().toFixed(1) }}%
             </div>
-            <div class="text-xs text-gray-500">Taux de succès</div>
+            <div class="text-xs text-gray-500">Taux de couverture</div>
           </div>
         </div>
       </div>
 
-      <!-- Stats cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <!-- Stats cards - Dynamic -->
+      <div class="grid gap-4 mb-6" :class="statsGridClass">
         <div class="stat-card">
           <div class="stat-value">{{ report.statistics.totalJars }}</div>
           <div class="stat-label">JARs détectés</div>
@@ -58,71 +61,110 @@
           <div class="stat-value text-green-600">{{ report.statistics.resolved }}</div>
           <div class="stat-label">Résolus</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value text-yellow-600">{{ report.statistics.unresolved }}</div>
-          <div class="stat-label">Non résolus</div>
+        <div class="stat-card bg-yellow-50">
+          <div class="stat-value text-yellow-600">{{ report.statistics.unresolvedInternal || 0 }}</div>
+          <div class="stat-label">Non rés. Interne</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value text-primary-600">{{ internalCount }}</div>
-          <div class="stat-label">Internes</div>
+        <div class="stat-card bg-red-50">
+          <div class="stat-value text-red-600">{{ report.statistics.unresolvedExternal || 0 }}</div>
+          <div class="stat-label">Non rés. Externe</div>
+        </div>
+        <div v-if="report.statistics.providedAutoFix > 0" class="stat-card bg-purple-50">
+          <div class="stat-value text-purple-600">{{ report.statistics.providedAutoFix }}</div>
+          <div class="stat-label">Provided</div>
+        </div>
+        <div v-if="report.statistics.missingCount > 0" class="stat-card bg-red-100">
+          <div class="stat-value text-red-700">{{ report.statistics.missingCount }}</div>
+          <div class="stat-label">Manquants</div>
         </div>
       </div>
 
-      <!-- Charts row -->
-      <div class="grid md:grid-cols-3 gap-4 mb-6">
-        <!-- Donut: Resolved vs Unresolved -->
-        <DonutChart
-          title="Résolution"
-          :labels="['Résolus', 'Non résolus']"
-          :data="[report.statistics.resolved, report.statistics.unresolved]"
-          :colors="['#22c55e', '#eab308']"
-        />
-
-        <!-- Donut: By Scope -->
-        <DonutChart
-          title="Par portée (scope)"
-          :labels="scopeLabels"
-          :data="scopeData"
-          :colors="['#3b82f6', '#8b5cf6', '#f97316', '#6b7280', '#ef4444']"
-        />
-
-        <!-- Radar: Key metrics -->
-        <RadarChart
-          title="Métriques clés"
-          :labels="['Total', 'Résolus', 'Internes', 'Externes', 'Test']"
-          :data="radarData"
-        />
+      <!-- Tabs -->
+      <div class="mb-6 border-b border-gray-200">
+        <nav class="flex space-x-8">
+          <button @click="activeTab = 'rapport'"
+                  :class="tabClass('rapport')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            Rapport
+          </button>
+          <button @click="activeTab = 'detected'"
+                  :class="tabClass('detected')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            Bibliothèques détectées ({{ report.detectedJars?.length || 0 }})
+          </button>
+        </nav>
       </div>
 
-      <!-- Bar chart: By method -->
-      <div class="mb-6">
-        <BarChart
-          title="Résolution par méthode"
-          :labels="methodLabels"
-          :data="methodData"
-          color="#3b82f6"
-        />
+      <!-- Tab: Rapport -->
+      <div v-if="activeTab === 'rapport'">
+        <!-- Charts row -->
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+          <!-- Donut: Resolved vs Unresolved -->
+          <DonutChart
+            title="Résolution"
+            :labels="['Résolus', 'Non résolus']"
+            :data="[report.statistics.resolved, report.statistics.unresolved]"
+            :colors="['#22c55e', '#eab308']"
+          />
+
+          <!-- Donut: By Scope -->
+          <DonutChart
+            title="Par portée (scope)"
+            :labels="scopeLabels"
+            :data="scopeData"
+            :colors="['#3b82f6', '#8b5cf6', '#f97316', '#6b7280', '#ef4444']"
+          />
+
+          <!-- Radar: Key metrics -->
+          <RadarChart
+            title="Métriques clés"
+            :labels="['Total', 'Résolus', 'Internes', 'Externes', 'Test']"
+            :data="radarData"
+          />
+        </div>
+
+        <!-- Bar chart: By method -->
+        <div class="mb-6">
+          <BarChart
+            title="Résolution par méthode"
+            :labels="methodLabels"
+            :data="methodData"
+            color="#3b82f6"
+          />
+        </div>
+
+        <!-- Missing packages section -->
+        <div v-if="report.missingPackages?.length > 0" class="mb-6">
+          <MissingPackages :packages="report.missingPackages" />
+        </div>
+
+        <!-- Version conflicts section -->
+        <div class="mb-6">
+          <VersionConflicts :libraries="report.libraries" />
+        </div>
+
+        <!-- Libraries table -->
+        <LibraryTable :libraries="report.libraries" />
       </div>
 
-      <!-- Version conflicts section -->
-      <div class="mb-6">
-        <VersionConflicts :libraries="report.libraries" />
+      <!-- Tab: Detected Libraries -->
+      <div v-if="activeTab === 'detected'">
+        <DetectedLibraries :jars="report.detectedJars || []" />
       </div>
-
-      <!-- Libraries table -->
-      <LibraryTable :libraries="report.libraries" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useReportStore } from '@/stores/reportStore'
 import DonutChart from '@/components/charts/DonutChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
 import RadarChart from '@/components/charts/RadarChart.vue'
 import LibraryTable from '@/components/LibraryTable.vue'
 import VersionConflicts from '@/components/VersionConflicts.vue'
+import MissingPackages from '@/components/MissingPackages.vue'
+import DetectedLibraries from '@/components/DetectedLibraries.vue'
 
 const props = defineProps({
   id: {
@@ -132,6 +174,7 @@ const props = defineProps({
 })
 
 const store = useReportStore()
+const activeTab = ref('rapport')
 
 const report = computed(() => store.currentReport)
 const loading = computed(() => store.loading)
@@ -143,18 +186,44 @@ onMounted(() => {
 
 watch(() => props.id, (newId) => {
   store.fetchReport(newId)
+  activeTab.value = 'rapport'
 })
 
-const successRateColor = computed(() => {
-  const rate = report.value?.statistics?.successRate || 0
+// Header class based on compilation success
+const headerClass = computed(() => {
+  const compiles = report.value?.compilationSuccess !== false
+  return compiles ? 'bg-blue-50 border border-blue-200' : 'bg-red-50 border border-red-200'
+})
+
+// Coverage rate color
+const coverageRateColor = computed(() => {
+  const rate = getCoverageRate()
   if (rate >= 90) return 'text-green-600'
   if (rate >= 70) return 'text-yellow-600'
   return 'text-red-600'
 })
 
-const internalCount = computed(() =>
-  report.value?.libraries?.filter(l => l.isInternal).length || 0
-)
+function getCoverageRate() {
+  return report.value?.statistics?.coverageRate ?? report.value?.statistics?.successRate ?? 0
+}
+
+// Stats grid class
+const statsGridClass = computed(() => {
+  let cols = 4 // Base: Total, Résolus, Non rés. Int., Non rés. Ext.
+  if (report.value?.statistics?.providedAutoFix > 0) cols++
+  if (report.value?.statistics?.missingCount > 0) cols++
+
+  if (cols <= 4) return 'grid-cols-2 md:grid-cols-4'
+  if (cols === 5) return 'grid-cols-2 md:grid-cols-5'
+  return 'grid-cols-2 md:grid-cols-6'
+})
+
+// Tab styling
+function tabClass(tab) {
+  return activeTab.value === tab
+    ? 'border-primary-600 text-primary-600'
+    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+}
 
 // Scope chart data
 const scopeLabels = computed(() => {

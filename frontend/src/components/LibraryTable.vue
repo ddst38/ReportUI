@@ -12,7 +12,6 @@
         <select v-model="statusFilter" class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-primary-500">
           <option value="">Tous</option>
           <option value="RESOLVED">Résolus</option>
-          <option value="LOCAL">Local</option>
           <option value="UNRESOLVED">Non résolus</option>
         </select>
         <!-- Scope filter -->
@@ -22,6 +21,12 @@
           <option value="PROVIDED">Provided</option>
           <option value="RUNTIME">Runtime</option>
           <option value="TEST">Test</option>
+        </select>
+        <!-- Type filter -->
+        <select v-model="typeFilter" class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-primary-500">
+          <option value="">Tous types</option>
+          <option value="internal">Interne</option>
+          <option value="external">Externe</option>
         </select>
       </div>
     </div>
@@ -43,7 +48,8 @@
               Scope
               <span v-if="sortKey === 'scope'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
             </th>
-            <th>Méthode</th>
+            <th>Identifiant</th>
+            <th>Type</th>
             <th class="cursor-pointer" @click="sort('size')">
               Taille
               <span v-if="sortKey === 'size'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
@@ -70,11 +76,23 @@
             </td>
             <td>
               <span :class="scopeBadgeClass(lib.scope)">{{ lib.scope }}</span>
+              <span v-if="lib.isAutoFixProvided" class="badge bg-violet-100 text-violet-800 ml-1">auto-fix</span>
             </td>
-            <td class="text-gray-600">{{ methodLabel(lib.resolutionMethod) }}</td>
+            <td>
+              <span v-if="lib.identificationSource" :class="identifierBadgeClass(lib.identificationSource)">
+                {{ identifierLabel(lib.identificationSource) }}
+              </span>
+              <span v-else class="text-gray-400">-</span>
+            </td>
+            <td>
+              <span :class="typeBadgeClass(lib.libraryType, lib.status)">
+                {{ lib.libraryType === 'internal' ? 'Interne' : 'Externe' }}
+              </span>
+            </td>
             <td class="text-right text-gray-500">{{ formatSize(lib.size) }}</td>
             <td>
               <span :class="statusBadgeClass(lib.status)">{{ statusLabel(lib.status) }}</span>
+              <span v-if="lib.status === 'UNRESOLVED' && lib.isLocalInstall" class="badge bg-gray-100 text-gray-600 ml-1">local</span>
             </td>
           </tr>
         </tbody>
@@ -96,6 +114,7 @@ const props = defineProps({
 const search = ref('')
 const statusFilter = ref('')
 const scopeFilter = ref('')
+const typeFilter = ref('')
 const sortKey = ref('originalName')
 const sortOrder = ref('asc')
 
@@ -121,6 +140,11 @@ const filteredLibraries = computed(() => {
   // Scope filter
   if (scopeFilter.value) {
     result = result.filter(lib => lib.scope === scopeFilter.value)
+  }
+
+  // Type filter
+  if (typeFilter.value) {
+    result = result.filter(lib => lib.libraryType === typeFilter.value)
   }
 
   // Sort
@@ -158,7 +182,6 @@ function formatSize(bytes) {
 function statusBadgeClass(status) {
   switch (status) {
     case 'RESOLVED': return 'badge badge-success'
-    case 'LOCAL': return 'badge badge-warning'
     case 'UNRESOLVED': return 'badge badge-error'
     default: return 'badge badge-info'
   }
@@ -167,7 +190,6 @@ function statusBadgeClass(status) {
 function statusLabel(status) {
   switch (status) {
     case 'RESOLVED': return 'Résolu'
-    case 'LOCAL': return 'Local'
     case 'UNRESOLVED': return 'Non résolu'
     default: return status
   }
@@ -183,19 +205,32 @@ function scopeBadgeClass(scope) {
   }
 }
 
-function methodLabel(method) {
-  const labels = {
-    'INTERNAL_PATTERN': 'Interne',
-    'KNOWN_CONFIG': 'Connu',
-    'ARTIFACTORY_CHECKSUM': 'Artif. SHA',
-    'ARTIFACTORY': 'Artifactory',
-    'CHECKSUM': 'Central SHA',
-    'MANIFEST': 'Manifest',
-    'PATTERN': 'Pattern',
-    'PACKAGE_ANALYSIS': 'Packages',
-    'UNRESOLVED': 'Non résolu',
-    'AUTO_FIX': 'Auto-fix'
+function identifierBadgeClass(source) {
+  switch (source) {
+    case 'ARTIFACTORY': return 'badge badge-info'
+    case 'MAVEN_CENTRAL': return 'badge badge-success'
+    case 'CACHE': return 'badge bg-gray-100 text-gray-600'
+    default: return 'badge'
   }
-  return labels[method] || method
+}
+
+function identifierLabel(source) {
+  switch (source) {
+    case 'ARTIFACTORY': return 'Artifactory'
+    case 'MAVEN_CENTRAL': return 'Maven Central'
+    case 'CACHE': return 'Cache'
+    default: return source
+  }
+}
+
+function typeBadgeClass(type, status) {
+  if (type === 'internal') {
+    return 'badge badge-info'
+  }
+  // External non résolu = rouge clair
+  if (status === 'UNRESOLVED') {
+    return 'badge bg-red-100 text-red-800'
+  }
+  return 'badge bg-gray-100 text-gray-600'
 }
 </script>

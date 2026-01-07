@@ -55,7 +55,10 @@ public class ReportStorageService {
             request.projectName(),
             migrationDate,
             request.statistics(),
-            request.libraries()
+            request.libraries(),
+            request.detectedJars(),
+            request.missingPackages(),
+            request.compilationSuccess()
         );
 
         Path file = storageDir.resolve(id + ".json");
