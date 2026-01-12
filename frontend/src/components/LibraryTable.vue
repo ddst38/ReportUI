@@ -208,8 +208,10 @@ function scopeBadgeClass(scope) {
 function identifierBadgeClass(source) {
   switch (source) {
     case 'ARTIFACTORY': return 'badge badge-info'
+    case 'NEXUS': return 'badge bg-blue-100 text-blue-800'
     case 'MAVEN_CENTRAL': return 'badge badge-success'
     case 'CACHE': return 'badge bg-gray-100 text-gray-600'
+    case 'PATTERN': return 'badge bg-yellow-100 text-yellow-800'
     default: return 'badge'
   }
 }
@@ -217,8 +219,10 @@ function identifierBadgeClass(source) {
 function identifierLabel(source) {
   switch (source) {
     case 'ARTIFACTORY': return 'Artifactory'
+    case 'NEXUS': return 'Nexus'
     case 'MAVEN_CENTRAL': return 'Maven Central'
     case 'CACHE': return 'Cache'
+    case 'PATTERN': return 'Pattern'
     default: return source
   }
 }
