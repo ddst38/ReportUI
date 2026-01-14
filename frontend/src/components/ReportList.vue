@@ -136,6 +136,9 @@
               :auto-fix-enabled="report.providedAutoFix > 0"
               :compilation-success="report.compilationSuccess"
               :cve-severity="report.cveSummary?.maxSeverity"
+              :artifactory-enabled="report.artifactoryEnabled"
+              :nexus-enabled="report.nexusEnabled"
+              :libraries-uploaded="report.deployedLibrariesCount || 0"
             />
           </div>
         </div>
@@ -190,6 +193,9 @@
                 :auto-fix-enabled="report.providedAutoFix > 0"
                 :compilation-success="report.compilationSuccess"
                 :cve-severity="report.cveSummary?.maxSeverity"
+                :artifactory-enabled="report.artifactoryEnabled"
+                :nexus-enabled="report.nexusEnabled"
+                :libraries-uploaded="report.deployedLibrariesCount || 0"
               />
             </td>
             <td class="px-4 py-3 text-right">

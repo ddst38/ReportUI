@@ -38,9 +38,17 @@
           <div>
             <h1 class="text-xl font-bold text-gray-900">{{ report.projectName }}</h1>
             <p class="text-sm text-gray-500 mt-1">Migration du {{ formatDate(report.migrationDate) }}</p>
-            <p v-if="report.compilationSuccess === false" class="text-sm text-red-600 mt-1 font-semibold">
-              Le projet ne compile pas
-            </p>
+            <!-- Indicateurs -->
+            <div class="mt-2">
+              <ReportIndicators
+                :auto-fix-enabled="report.statistics?.providedAutoFix > 0"
+                :compilation-success="report.compilationSuccess"
+                :cve-severity="report.cveSummary?.maxSeverity"
+                :artifactory-enabled="isArtifactoryEnabled"
+                :nexus-enabled="isNexusEnabled"
+                :libraries-uploaded="report.deploymentInfo?.deployedCount || 0"
+              />
+            </div>
           </div>
           <div class="text-right">
             <div class="text-3xl font-bold" :class="coverageRateColor">
@@ -224,6 +232,7 @@ import DetectedLibraries from '@/components/DetectedLibraries.vue'
 import CveTable from '@/components/CveTable.vue'
 import CveStatsTab from '@/components/CveStatsTab.vue'
 import DeployedLibrariesTab from '@/components/DeployedLibrariesTab.vue'
+import ReportIndicators from '@/components/ReportIndicators.vue'
 
 const props = defineProps({
   id: {
@@ -275,6 +284,19 @@ const hasCveData = computed(() => {
 const hasDeploymentData = computed(() => {
   return report.value?.deploymentInfo != null &&
          report.value?.deploymentInfo?.deployedLibraries?.length > 0
+})
+
+// Artifactory/Nexus detection via byMethod
+const isArtifactoryEnabled = computed(() => {
+  const byMethod = report.value?.statistics?.byMethod
+  if (!byMethod) return false
+  return byMethod['ARTIFACTORY'] > 0 || byMethod['ARTIFACTORY_CHECKSUM'] > 0
+})
+
+const isNexusEnabled = computed(() => {
+  const byMethod = report.value?.statistics?.byMethod
+  if (!byMethod) return false
+  return byMethod['NEXUS'] > 0 || byMethod['NEXUS_CHECKSUM'] > 0
 })
 
 const cveSeverityDot = computed(() => {
