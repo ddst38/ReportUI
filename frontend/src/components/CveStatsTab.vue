@@ -179,24 +179,33 @@ const severityColors = computed(() => {
 
 // Top libraries
 const topLibraries = computed(() => {
+  const severityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, NONE: 4 }
+
   const byLib = {}
   for (const cve of props.vulnerabilities) {
     const gav = cve.gav || cve.libraryName
     if (!byLib[gav]) {
-      byLib[gav] = { gav, count: 0, maxSeverity: 'LOW', maxScore: 0 }
+      byLib[gav] = { gav, count: 0, maxSeverity: 'NONE', maxScore: 0 }
     }
     byLib[gav].count++
+
+    // Mettre à jour le score max
     if (cve.cvssScore > byLib[gav].maxScore) {
       byLib[gav].maxScore = cve.cvssScore
+    }
+
+    // Mettre à jour la sévérité max (indépendamment du score)
+    const currentSevOrder = severityOrder[byLib[gav].maxSeverity] ?? 4
+    const newSevOrder = severityOrder[cve.severity] ?? 4
+    if (newSevOrder < currentSevOrder) {
       byLib[gav].maxSeverity = cve.severity
     }
   }
 
   return Object.values(byLib)
     .sort((a, b) => {
-      // Sort by max severity first, then by count
-      const severityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
-      const sevDiff = (severityOrder[a.maxSeverity] || 4) - (severityOrder[b.maxSeverity] || 4)
+      // Trier par sévérité max d'abord, puis par nombre de CVE
+      const sevDiff = (severityOrder[a.maxSeverity] ?? 4) - (severityOrder[b.maxSeverity] ?? 4)
       if (sevDiff !== 0) return sevDiff
       return b.count - a.count
     })
