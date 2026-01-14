@@ -41,7 +41,7 @@
             <!-- Indicateurs -->
             <div class="mt-2">
               <ReportIndicators
-                :auto-fix-enabled="report.statistics?.autoFixEnabled"
+                :auto-fix-enabled="report.statistics?.providedAutoFix > 0"
                 :compilation-success="report.compilationSuccess"
                 :cve-severity="report.cveSummary?.maxSeverity"
                 :artifactory-enabled="isArtifactoryEnabled"

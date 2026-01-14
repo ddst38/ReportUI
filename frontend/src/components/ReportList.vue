@@ -133,7 +133,7 @@
           <!-- Indicators -->
           <div class="mt-2 pt-2 border-t border-gray-200">
             <ReportIndicators
-              :auto-fix-enabled="report.autoFixEnabled"
+              :auto-fix-enabled="report.providedAutoFix > 0"
               :compilation-success="report.compilationSuccess"
               :cve-severity="report.cveSummary?.maxSeverity"
               :artifactory-enabled="report.artifactoryEnabled"
@@ -190,7 +190,7 @@
             </td>
             <td class="px-4 py-3 text-center">
               <ReportIndicators
-                :auto-fix-enabled="report.autoFixEnabled"
+                :auto-fix-enabled="report.providedAutoFix > 0"
                 :compilation-success="report.compilationSuccess"
                 :cve-severity="report.cveSummary?.maxSeverity"
                 :artifactory-enabled="report.artifactoryEnabled"

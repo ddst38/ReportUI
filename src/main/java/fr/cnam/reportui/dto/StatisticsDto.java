@@ -27,9 +27,6 @@ public record StatisticsDto(
     @Schema(description = "Nombre de dépendances provided via auto-fix", example = "3")
     Integer providedAutoFix,
 
-    @Schema(description = "Indique si l'option --auto-fix était activée")
-    Boolean autoFixEnabled,
-
     @Schema(description = "Nombre de packages manquants distincts", example = "2")
     Integer missingCount,
 
