@@ -29,5 +29,11 @@ public record CreateReportRequest(
     List<MissingPackageDto> missingPackages,
 
     @Schema(description = "Indique si le projet compile avec succès")
-    Boolean compilationSuccess
+    Boolean compilationSuccess,
+
+    @Schema(description = "Liste des vulnérabilités CVE détectées")
+    List<CveInfoDto> cveVulnerabilities,
+
+    @Schema(description = "Résumé des statistiques CVE")
+    CveSummaryDto cveSummary
 ) {}

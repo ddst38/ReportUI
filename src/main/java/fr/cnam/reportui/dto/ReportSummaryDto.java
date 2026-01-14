@@ -46,7 +46,22 @@ public record ReportSummaryDto(
     Double coverageRate,
 
     @Schema(description = "Indique si le projet compile avec succès")
-    Boolean compilationSuccess
+    Boolean compilationSuccess,
+
+    @Schema(description = "Résumé CVE (si analyse effectuée)")
+    CveSummaryDto cveSummary,
+
+    @Schema(description = "Résolus depuis repos standards")
+    Integer resolvedStd,
+
+    @Schema(description = "Résolus internes depuis migration-java-dette")
+    Integer resolvedInt,
+
+    @Schema(description = "Résolus externes depuis migration-java-dette")
+    Integer resolvedExt,
+
+    @Schema(description = "Indique si le repo migration-java-dette est utilisé")
+    Boolean hasMigrationRepo
 ) {
     /**
      * Crée un résumé à partir d'un rapport complet.
@@ -65,7 +80,33 @@ public record ReportSummaryDto(
             report.statistics().missingCount(),
             report.statistics().successRate(),
             report.statistics().coverageRate(),
-            report.compilationSuccess()
+            report.compilationSuccess(),
+            report.cveSummary(),
+            report.statistics().resolvedStd(),
+            report.statistics().resolvedInt(),
+            report.statistics().resolvedExt(),
+            report.statistics().hasMigrationRepo()
         );
+    }
+
+    /**
+     * Retourne la sévérité CVE maximale ou null.
+     */
+    public String maxCveSeverity() {
+        return cveSummary != null ? cveSummary.maxSeverity() : null;
+    }
+
+    /**
+     * Retourne la couleur de la sévérité CVE maximale ou null.
+     */
+    public String maxCveSeverityColor() {
+        return cveSummary != null ? cveSummary.maxSeverityColor() : null;
+    }
+
+    /**
+     * Vérifie si le projet a des vulnérabilités CVE.
+     */
+    public boolean hasCveVulnerabilities() {
+        return cveSummary != null && cveSummary.hasVulnerabilities();
     }
 }

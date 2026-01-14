@@ -58,7 +58,9 @@ public class ReportStorageService {
             request.libraries(),
             request.detectedJars(),
             request.missingPackages(),
-            request.compilationSuccess()
+            request.compilationSuccess(),
+            request.cveVulnerabilities(),
+            request.cveSummary()
         );
 
         Path file = storageDir.resolve(id + ".json");

@@ -2,8 +2,26 @@
   <div>
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold text-gray-800">Rapports de migration</h1>
-      <div class="text-sm text-gray-500">
-        {{ reportsCount }} rapport(s)
+      <div class="flex items-center gap-4">
+        <!-- View toggle -->
+        <div class="flex border border-gray-300 rounded">
+          <button @click="viewMode = 'cards'"
+                  :class="['px-2 py-1', viewMode === 'cards' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50']">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+            </svg>
+          </button>
+          <button @click="viewMode = 'list'"
+                  :class="['px-2 py-1', viewMode === 'list' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50']">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+        </div>
+        <div class="text-sm text-gray-500">
+          {{ reportsCount }} rapport(s)
+        </div>
       </div>
     </div>
 
@@ -29,8 +47,8 @@
       </p>
     </div>
 
-    <!-- Reports grid -->
-    <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <!-- CARDS VIEW -->
+    <div v-else-if="viewMode === 'cards'" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <div v-for="report in reports" :key="report.id"
            :class="cardClass(report)"
            @click="goToReport(report.id)">
@@ -50,37 +68,57 @@
             </button>
           </div>
 
-          <!-- Stats - Dynamic grid -->
+          <!-- Stats - Dynamic grid with colors -->
           <div class="grid gap-2 mb-3" :class="statsGridClass(report)">
             <!-- Total -->
-            <div class="text-center p-2 bg-gray-50 rounded">
-              <div class="text-lg font-bold text-gray-700">{{ report.totalJars }}</div>
-              <div class="text-xxs text-gray-500">Total</div>
+            <div class="stat-box stat-gray">
+              <div class="stat-value">{{ report.totalJars }}</div>
+              <div class="stat-label">Total</div>
             </div>
-            <!-- Résolus -->
-            <div class="text-center p-2 bg-green-50 rounded">
-              <div class="text-lg font-bold text-green-600">{{ report.resolved }}</div>
-              <div class="text-xxs text-gray-500">Résolus</div>
+            <!-- Résolus - Mode standard (sans migration-java-dette) -->
+            <div v-if="!report.hasMigrationRepo" class="stat-box stat-green">
+              <div class="stat-value">{{ report.resolved }}</div>
+              <div class="stat-label">Résolus</div>
+            </div>
+            <!-- Résolus STD (mode migration-java-dette) -->
+            <div v-if="report.hasMigrationRepo" class="stat-box stat-green">
+              <div class="stat-value">{{ report.resolvedStd || 0 }}</div>
+              <div class="stat-label">Rés. STD</div>
+            </div>
+            <!-- Résolus INT (migration-java-dette internes) -->
+            <div v-if="report.hasMigrationRepo" class="stat-box stat-lime">
+              <div class="stat-value">{{ report.resolvedInt || 0 }}</div>
+              <div class="stat-label">Rés. INT</div>
+            </div>
+            <!-- Résolus EXT (migration-java-dette externes) -->
+            <div v-if="report.hasMigrationRepo" class="stat-box stat-red-bright">
+              <div class="stat-value">{{ report.resolvedExt || 0 }}</div>
+              <div class="stat-label">Rés. EXT</div>
             </div>
             <!-- Non résolus - Interne -->
-            <div class="text-center p-2 bg-yellow-50 rounded">
-              <div class="text-lg font-bold text-yellow-600">{{ report.unresolvedInternal || 0 }}</div>
-              <div class="text-xxs text-gray-500">Non rés. Int.</div>
+            <div class="stat-box stat-yellow">
+              <div class="stat-value">{{ report.unresolvedInternal || 0 }}</div>
+              <div class="stat-label">Non rés. Int.</div>
             </div>
-            <!-- Non résolus - Externe -->
-            <div class="text-center p-2 bg-red-50 rounded">
-              <div class="text-lg font-bold text-red-600">{{ report.unresolvedExternal || 0 }}</div>
-              <div class="text-xxs text-gray-500">Non rés. Ext.</div>
+            <!-- Non résolus - Externe (avec warning si > 0) -->
+            <div class="stat-box stat-red relative">
+              <div class="stat-value">{{ report.unresolvedExternal || 0 }}</div>
+              <div class="stat-label">Non rés. Ext.</div>
+              <svg v-if="report.unresolvedExternal > 0"
+                   class="absolute top-1 right-1 w-3 h-3 text-red-600"
+                   fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z" clip-rule="evenodd"/>
+              </svg>
             </div>
-            <!-- Provided (auto-fix) - conditionnel -->
-            <div v-if="report.providedAutoFix > 0" class="text-center p-2 bg-purple-50 rounded">
-              <div class="text-lg font-bold text-purple-600">{{ report.providedAutoFix }}</div>
-              <div class="text-xxs text-gray-500">Provided</div>
+            <!-- Provided (auto-fix) -->
+            <div v-if="report.providedAutoFix > 0" class="stat-box stat-purple">
+              <div class="stat-value">{{ report.providedAutoFix }}</div>
+              <div class="stat-label">Provided</div>
             </div>
-            <!-- Missing - conditionnel -->
-            <div v-if="report.missingCount > 0" class="text-center p-2 bg-red-100 rounded">
-              <div class="text-lg font-bold text-red-700">{{ report.missingCount }}</div>
-              <div class="text-xxs text-gray-500">Manquants</div>
+            <!-- Missing -->
+            <div v-if="report.missingCount > 0" class="stat-box stat-red-dark">
+              <div class="stat-value">{{ report.missingCount }}</div>
+              <div class="stat-label">Manquants</div>
             </div>
           </div>
 
@@ -91,8 +129,81 @@
           <div class="text-right text-xxs text-gray-500 mt-1">
             {{ getCoverageRate(report).toFixed(1) }}% couverture
           </div>
+
+          <!-- Indicators -->
+          <div class="mt-2 pt-2 border-t border-gray-200">
+            <ReportIndicators
+              :auto-fix-enabled="report.providedAutoFix > 0"
+              :compilation-success="report.compilationSuccess"
+              :cve-severity="report.cveSummary?.maxSeverity"
+            />
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div v-else class="bg-white rounded-lg shadow overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Projet</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Total</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Résolus</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Non rés.</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Couverture</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">État</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr v-for="report in reports" :key="report.id"
+              :class="listRowClass(report)"
+              @click="goToReport(report.id)"
+              class="cursor-pointer">
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900 text-sm">{{ report.projectName }}</div>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500">
+              {{ formatDate(report.migrationDate) }}
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="text-sm font-medium text-gray-700">{{ report.totalJars }}</span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="text-sm font-medium text-green-600">{{ report.resolved }}</span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="text-sm font-medium text-red-600">{{ report.unresolved }}</span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <div class="w-16 h-2 bg-gray-200 rounded-full">
+                  <div class="h-2 bg-primary-500 rounded-full" :style="{ width: getCoverageRate(report) + '%' }"></div>
+                </div>
+                <span class="text-xs text-gray-600">{{ getCoverageRate(report).toFixed(0) }}%</span>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <ReportIndicators
+                :auto-fix-enabled="report.providedAutoFix > 0"
+                :compilation-success="report.compilationSuccess"
+                :cve-severity="report.cveSummary?.maxSeverity"
+              />
+            </td>
+            <td class="px-4 py-3 text-right">
+              <button @click.stop="confirmDelete(report)"
+                      class="text-gray-400 hover:text-red-500 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Delete confirmation modal -->
@@ -122,12 +233,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReportStore } from '@/stores/reportStore'
+import ReportIndicators from '@/components/ReportIndicators.vue'
 
 const router = useRouter()
 const store = useReportStore()
 
 const showDeleteModal = ref(false)
 const reportToDelete = ref(null)
+const viewMode = ref('cards')
 
 const reports = computed(() => store.reports)
 const loading = computed(() => store.loading)
@@ -173,25 +286,116 @@ async function executeDelete() {
 }
 
 function cardClass(report) {
+  // Priorité: CVE critique > Compilation échouée > Erreurs > Normal
+  const hasCriticalCve = report.cveSummary?.maxSeverity === 'CRITICAL'
+  const hasHighCve = report.cveSummary?.maxSeverity === 'HIGH'
   const hasMissing = report.missingCount > 0 || report.compilationSuccess === false
-  return hasMissing
-    ? 'bg-red-50 border border-red-200 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
-    : 'bg-blue-50 border border-blue-200 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+
+  if (hasCriticalCve) {
+    return 'bg-gray-100 border-2 border-gray-800 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+  }
+  if (hasHighCve) {
+    return 'bg-red-50 border-2 border-red-400 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+  }
+  if (hasMissing) {
+    return 'bg-red-50 border border-red-200 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+  }
+  return 'bg-blue-50 border border-blue-200 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+}
+
+function listRowClass(report) {
+  const hasCriticalCve = report.cveSummary?.maxSeverity === 'CRITICAL'
+  const hasMissing = report.missingCount > 0 || report.compilationSuccess === false
+
+  if (hasCriticalCve) return 'bg-gray-100 hover:bg-gray-200'
+  if (hasMissing) return 'bg-red-50 hover:bg-red-100'
+  return 'hover:bg-gray-50'
 }
 
 function statsGridClass(report) {
-  // Calculer le nombre de colonnes en fonction des stats affichées
-  let cols = 4 // Total, Résolus, Non rés. Int., Non rés. Ext.
+  let cols = 4 // Total + Non rés. Int. + Non rés. Ext. + 1 (Résolus ou STD)
+  if (report.hasMigrationRepo) cols += 2 // INT + EXT
   if (report.providedAutoFix > 0) cols++
   if (report.missingCount > 0) cols++
 
   if (cols <= 4) return 'grid-cols-4'
   if (cols === 5) return 'grid-cols-5'
-  return 'grid-cols-6'
+  if (cols === 6) return 'grid-cols-6'
+  if (cols === 7) return 'grid-cols-7'
+  return 'grid-cols-8'
 }
 
 function getCoverageRate(report) {
-  // Utiliser coverageRate si disponible, sinon fallback sur successRate
   return report.coverageRate ?? report.successRate ?? 0
 }
 </script>
+
+<style scoped>
+.stat-box {
+  @apply text-center p-2 rounded;
+}
+
+.stat-value {
+  @apply text-lg font-bold;
+}
+
+.stat-label {
+  @apply text-xxs text-gray-500;
+}
+
+.stat-gray {
+  @apply bg-gray-100;
+}
+.stat-gray .stat-value {
+  @apply text-gray-700;
+}
+
+.stat-green {
+  @apply bg-green-100;
+}
+.stat-green .stat-value {
+  @apply text-green-600;
+}
+
+.stat-yellow {
+  @apply bg-yellow-100;
+}
+.stat-yellow .stat-value {
+  @apply text-yellow-600;
+}
+
+.stat-red {
+  @apply bg-red-100;
+}
+.stat-red .stat-value {
+  @apply text-red-600;
+}
+
+.stat-red-dark {
+  @apply bg-red-200;
+}
+.stat-red-dark .stat-value {
+  @apply text-red-700;
+}
+
+.stat-purple {
+  @apply bg-purple-100;
+}
+.stat-purple .stat-value {
+  @apply text-purple-600;
+}
+
+.stat-lime {
+  @apply bg-lime-100;
+}
+.stat-lime .stat-value {
+  @apply text-lime-700;
+}
+
+.stat-red-bright {
+  @apply bg-red-200;
+}
+.stat-red-bright .stat-value {
+  @apply text-red-700;
+}
+</style>

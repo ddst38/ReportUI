@@ -40,5 +40,17 @@ public record StatisticsDto(
     Map<String, Integer> byScope,
 
     @Schema(description = "Répartition par méthode de résolution")
-    Map<String, Integer> byMethod
+    Map<String, Integer> byMethod,
+
+    @Schema(description = "Résolus depuis repos standards (hors migration-java-dette)")
+    Integer resolvedStd,
+
+    @Schema(description = "Résolus internes depuis migration-java-dette")
+    Integer resolvedInt,
+
+    @Schema(description = "Résolus externes depuis migration-java-dette")
+    Integer resolvedExt,
+
+    @Schema(description = "Indique si le repo migration-java-dette est utilisé")
+    Boolean hasMigrationRepo
 ) {}

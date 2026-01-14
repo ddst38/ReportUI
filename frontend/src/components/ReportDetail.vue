@@ -57,9 +57,23 @@
           <div class="stat-value">{{ report.statistics.totalJars }}</div>
           <div class="stat-label">JARs détectés</div>
         </div>
-        <div class="stat-card">
+        <!-- Mode standard -->
+        <div v-if="!report.statistics.hasMigrationRepo" class="stat-card bg-green-50">
           <div class="stat-value text-green-600">{{ report.statistics.resolved }}</div>
           <div class="stat-label">Résolus</div>
+        </div>
+        <!-- Mode migration-java-dette -->
+        <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-green-50">
+          <div class="stat-value text-green-600">{{ report.statistics.resolvedStd || 0 }}</div>
+          <div class="stat-label">Rés. STD</div>
+        </div>
+        <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-lime-50">
+          <div class="stat-value text-lime-700">{{ report.statistics.resolvedInt || 0 }}</div>
+          <div class="stat-label">Rés. INT</div>
+        </div>
+        <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-red-100">
+          <div class="stat-value text-red-700">{{ report.statistics.resolvedExt || 0 }}</div>
+          <div class="stat-label">Rés. EXT</div>
         </div>
         <div class="stat-card bg-yellow-50">
           <div class="stat-value text-yellow-600">{{ report.statistics.unresolvedInternal || 0 }}</div>
@@ -91,6 +105,21 @@
                   :class="tabClass('detected')"
                   class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
             Bibliothèques détectées ({{ report.detectedJars?.length || 0 }})
+          </button>
+          <button v-if="hasCveData"
+                  @click="activeTab = 'cve'"
+                  :class="tabClass('cve')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            <span class="flex items-center gap-1.5">
+              <span :class="['w-2 h-2 rounded-full', cveSeverityDot]"></span>
+              Vulnérabilités CVE ({{ report.cveSummary?.totalVulnerabilities || 0 }})
+            </span>
+          </button>
+          <button v-if="hasCveData"
+                  @click="activeTab = 'cve-stats'"
+                  :class="tabClass('cve-stats')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            CVE Stats
           </button>
         </nav>
       </div>
@@ -151,6 +180,19 @@
       <div v-if="activeTab === 'detected'">
         <DetectedLibraries :jars="report.detectedJars || []" />
       </div>
+
+      <!-- Tab: CVE Vulnerabilities -->
+      <div v-if="activeTab === 'cve'">
+        <CveTable :vulnerabilities="report.cveVulnerabilities || []" />
+      </div>
+
+      <!-- Tab: CVE Stats -->
+      <div v-if="activeTab === 'cve-stats'">
+        <CveStatsTab
+          :summary="report.cveSummary || {}"
+          :vulnerabilities="report.cveVulnerabilities || []"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -165,6 +207,8 @@ import LibraryTable from '@/components/LibraryTable.vue'
 import VersionConflicts from '@/components/VersionConflicts.vue'
 import MissingPackages from '@/components/MissingPackages.vue'
 import DetectedLibraries from '@/components/DetectedLibraries.vue'
+import CveTable from '@/components/CveTable.vue'
+import CveStatsTab from '@/components/CveStatsTab.vue'
 
 const props = defineProps({
   id: {
@@ -207,15 +251,35 @@ function getCoverageRate() {
   return report.value?.statistics?.coverageRate ?? report.value?.statistics?.successRate ?? 0
 }
 
+// CVE data
+const hasCveData = computed(() => {
+  return report.value?.cveSummary != null || (report.value?.cveVulnerabilities?.length > 0)
+})
+
+const cveSeverityDot = computed(() => {
+  const severity = report.value?.cveSummary?.maxSeverity
+  const classes = {
+    'CRITICAL': 'bg-gray-900',
+    'HIGH': 'bg-red-600',
+    'MEDIUM': 'bg-orange-500',
+    'LOW': 'bg-yellow-400',
+    'NONE': 'bg-green-500'
+  }
+  return classes[severity] || 'bg-green-500'
+})
+
 // Stats grid class
 const statsGridClass = computed(() => {
-  let cols = 4 // Base: Total, Résolus, Non rés. Int., Non rés. Ext.
+  let cols = 4 // Base: Total, Résolus/STD, Non rés. Int., Non rés. Ext.
+  if (report.value?.statistics?.hasMigrationRepo) cols += 2 // INT + EXT
   if (report.value?.statistics?.providedAutoFix > 0) cols++
   if (report.value?.statistics?.missingCount > 0) cols++
 
   if (cols <= 4) return 'grid-cols-2 md:grid-cols-4'
   if (cols === 5) return 'grid-cols-2 md:grid-cols-5'
-  return 'grid-cols-2 md:grid-cols-6'
+  if (cols === 6) return 'grid-cols-3 md:grid-cols-6'
+  if (cols === 7) return 'grid-cols-3 md:grid-cols-7'
+  return 'grid-cols-4 md:grid-cols-8'
 })
 
 // Tab styling
