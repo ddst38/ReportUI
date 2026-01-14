@@ -292,7 +292,7 @@ function cardClass(report) {
   const hasMissing = report.missingCount > 0 || report.compilationSuccess === false
 
   if (hasCriticalCve) {
-    return 'bg-gray-100 border-2 border-gray-800 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
+    return 'bg-red-50 border-2 border-red-800 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
   }
   if (hasHighCve) {
     return 'bg-red-50 border-2 border-red-400 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer'
@@ -307,7 +307,7 @@ function listRowClass(report) {
   const hasCriticalCve = report.cveSummary?.maxSeverity === 'CRITICAL'
   const hasMissing = report.missingCount > 0 || report.compilationSuccess === false
 
-  if (hasCriticalCve) return 'bg-gray-100 hover:bg-gray-200'
+  if (hasCriticalCve) return 'bg-red-50 hover:bg-red-100'
   if (hasMissing) return 'bg-red-50 hover:bg-red-100'
   return 'hover:bg-gray-50'
 }
