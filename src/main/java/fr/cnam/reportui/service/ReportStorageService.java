@@ -60,7 +60,8 @@ public class ReportStorageService {
             request.missingPackages(),
             request.compilationSuccess(),
             request.cveVulnerabilities(),
-            request.cveSummary()
+            request.cveSummary(),
+            request.deploymentInfo()
         );
 
         Path file = storageDir.resolve(id + ".json");

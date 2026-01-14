@@ -38,5 +38,8 @@ public record ProjectReportDto(
     List<CveInfoDto> cveVulnerabilities,
 
     @Schema(description = "Résumé des statistiques CVE")
-    CveSummaryDto cveSummary
+    CveSummaryDto cveSummary,
+
+    @Schema(description = "Informations de déploiement vers Artifactory/Nexus (mode REMOTE uniquement)")
+    DeploymentInfoDto deploymentInfo
 ) {}

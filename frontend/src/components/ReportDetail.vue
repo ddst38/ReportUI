@@ -121,6 +121,15 @@
                   class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
             CVE Stats
           </button>
+          <button v-if="hasDeploymentData"
+                  @click="activeTab = 'deployed'"
+                  :class="tabClass('deployed')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              Librairies déployées ({{ report.deploymentInfo?.deployedCount || 0 }})
+            </span>
+          </button>
         </nav>
       </div>
 
@@ -193,6 +202,11 @@
           :vulnerabilities="report.cveVulnerabilities || []"
         />
       </div>
+
+      <!-- Tab: Deployed Libraries (Remote mode) -->
+      <div v-if="activeTab === 'deployed'">
+        <DeployedLibrariesTab :deploymentInfo="report.deploymentInfo" />
+      </div>
     </div>
   </div>
 </template>
@@ -209,6 +223,7 @@ import MissingPackages from '@/components/MissingPackages.vue'
 import DetectedLibraries from '@/components/DetectedLibraries.vue'
 import CveTable from '@/components/CveTable.vue'
 import CveStatsTab from '@/components/CveStatsTab.vue'
+import DeployedLibrariesTab from '@/components/DeployedLibrariesTab.vue'
 
 const props = defineProps({
   id: {
@@ -254,6 +269,12 @@ function getCoverageRate() {
 // CVE data
 const hasCveData = computed(() => {
   return report.value?.cveSummary != null || (report.value?.cveVulnerabilities?.length > 0)
+})
+
+// Deployment data (mode REMOTE)
+const hasDeploymentData = computed(() => {
+  return report.value?.deploymentInfo != null &&
+         report.value?.deploymentInfo?.deployedLibraries?.length > 0
 })
 
 const cveSeverityDot = computed(() => {
