@@ -36,6 +36,9 @@ public record ReportSummaryDto(
     @Schema(description = "Nombre de dépendances provided via auto-fix", example = "3")
     Integer providedAutoFix,
 
+    @Schema(description = "Indique si l'option --auto-fix était activée")
+    Boolean autoFixEnabled,
+
     @Schema(description = "Nombre de packages manquants distincts", example = "2")
     Integer missingCount,
 
@@ -103,6 +106,7 @@ public record ReportSummaryDto(
             report.statistics().unresolvedInternal(),
             report.statistics().unresolvedExternal(),
             report.statistics().providedAutoFix(),
+            report.statistics().autoFixEnabled(),
             report.statistics().missingCount(),
             report.statistics().successRate(),
             report.statistics().coverageRate(),
