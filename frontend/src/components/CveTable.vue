@@ -227,7 +227,7 @@ function severityClass(severity) {
 
 function severityTextClass(severity) {
   const classes = {
-    CRITICAL: 'text-gray-900 font-semibold',
+    CRITICAL: 'text-red-800 font-semibold',
     HIGH: 'text-red-700 font-semibold',
     MEDIUM: 'text-orange-600',
     LOW: 'text-yellow-700',
@@ -265,7 +265,7 @@ function truncateDesc(text) {
 }
 
 .cve-critical {
-  @apply bg-gray-900 text-white;
+  @apply bg-red-800 text-white;
 }
 
 .cve-high {
@@ -289,7 +289,7 @@ function truncateDesc(text) {
 }
 
 .severity-icon.cve-critical {
-  @apply text-gray-900;
+  @apply text-red-800;
 }
 
 .severity-icon.cve-high {

@@ -280,7 +280,7 @@ const hasDeploymentData = computed(() => {
 const cveSeverityDot = computed(() => {
   const severity = report.value?.cveSummary?.maxSeverity
   const classes = {
-    'CRITICAL': 'bg-gray-900',
+    'CRITICAL': 'bg-red-800',
     'HIGH': 'bg-red-600',
     'MEDIUM': 'bg-orange-500',
     'LOW': 'bg-yellow-400',

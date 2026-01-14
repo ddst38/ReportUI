@@ -102,7 +102,7 @@ const props = defineProps({
 
 const cveSeverityColor = computed(() => {
   const colors = {
-    'CRITICAL': 'text-gray-900',
+    'CRITICAL': 'text-red-800',
     'HIGH': 'text-red-600',
     'MEDIUM': 'text-orange-500',
     'LOW': 'text-yellow-500'

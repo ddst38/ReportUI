@@ -170,7 +170,7 @@ const severityData = computed(() => {
 
 const severityColors = computed(() => {
   const colors = []
-  if (props.summary.criticalCount > 0) colors.push('#1a1a1a')
+  if (props.summary.criticalCount > 0) colors.push('#991b1b')
   if (props.summary.highCount > 0) colors.push('#dc2626')
   if (props.summary.mediumCount > 0) colors.push('#f97316')
   if (props.summary.lowCount > 0) colors.push('#eab308')
@@ -220,7 +220,7 @@ const riskLevel = computed(() => {
 const riskLevelColor = computed(() => {
   const level = riskLevel.value
   const colors = {
-    'CRITIQUE': 'text-gray-900',
+    'CRITIQUE': 'text-red-800',
     'ÉLEVÉ': 'text-red-600',
     'MOYEN': 'text-orange-500',
     'FAIBLE': 'text-yellow-500',
@@ -248,7 +248,7 @@ function severityClass(severity) {
 
 function severityBgClass(severity) {
   const classes = {
-    CRITICAL: 'bg-gray-900',
+    CRITICAL: 'bg-red-800',
     HIGH: 'bg-red-600',
     MEDIUM: 'bg-orange-500',
     LOW: 'bg-yellow-400'
@@ -271,7 +271,7 @@ function severityBgClass(severity) {
 }
 
 .cve-critical {
-  @apply bg-gray-900 text-white;
+  @apply bg-red-800 text-white;
 }
 
 .cve-high {
