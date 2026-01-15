@@ -42,6 +42,9 @@ public record StatisticsDto(
     @Schema(description = "Répartition par méthode de résolution")
     Map<String, Integer> byMethod,
 
+    @Schema(description = "Répartition par localisation source")
+    Map<String, Integer> byLocation,
+
     @Schema(description = "Résolus depuis repos standards (hors migration-java-dette)")
     Integer resolvedStd,
 

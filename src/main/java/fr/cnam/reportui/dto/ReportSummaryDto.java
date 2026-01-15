@@ -3,6 +3,7 @@ package fr.cnam.reportui.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Résumé d'un rapport pour la liste.
@@ -70,7 +71,10 @@ public record ReportSummaryDto(
     Boolean nexusEnabled,
 
     @Schema(description = "Nombre de librairies déployées (mode REMOTE)")
-    Integer deployedLibrariesCount
+    Integer deployedLibrariesCount,
+
+    @Schema(description = "Répartition par localisation source")
+    Map<String, Integer> byLocation
 ) {
     /**
      * Crée un résumé à partir d'un rapport complet.
@@ -114,7 +118,8 @@ public record ReportSummaryDto(
             report.statistics().hasMigrationRepo(),
             artifactory,
             nexus,
-            deployedCount
+            deployedCount,
+            report.statistics().byLocation()
         );
     }
 

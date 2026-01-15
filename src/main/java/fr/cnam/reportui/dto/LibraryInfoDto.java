@@ -50,7 +50,13 @@ public record LibraryInfoDto(
     boolean isAutoFixProvided,
 
     @Schema(description = "Installée localement (liblocale)", example = "false")
-    boolean isLocalInstall
+    boolean isLocalInstall,
+
+    @Schema(description = "Repository source de la résolution", example = "maven-releases")
+    String sourceRepository,
+
+    @Schema(description = "Provient du repo de dette technique (migration-java-dette)", example = "false")
+    Boolean isFromDebtRepo
 ) {
     /**
      * Retourne les coordonnées Maven au format GAV.

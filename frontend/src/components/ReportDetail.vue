@@ -169,13 +169,13 @@
           />
         </div>
 
-        <!-- Bar chart: By method -->
+        <!-- Bar chart: Library location -->
         <div class="mb-6">
           <BarChart
-            title="Résolution par méthode"
-            :labels="methodLabels"
-            :data="methodData"
-            color="#3b82f6"
+            title="Localisation des librairies"
+            :labels="locationLabels"
+            :data="locationData"
+            :colors="locationColors"
           />
         </div>
 
@@ -364,6 +364,121 @@ const methodLabels = computed(() => {
 const methodData = computed(() => {
   if (!report.value?.statistics?.byMethod) return []
   return Object.values(report.value.statistics.byMethod)
+})
+
+// Localisation des librairies - calcul à partir des libraries
+const libraryLocationStats = computed(() => {
+  const libs = report.value?.libraries || []
+  const useArtifactory = isArtifactoryEnabled.value
+  const useNexus = isNexusEnabled.value
+
+  const stats = {
+    MAVEN_CENTRAL_EXT: 0,
+    ARTIFACTORY_INT: 0,
+    ARTIFACTORY_EXT: 0,
+    ARTIFACTORY_DEBT_INT: 0,
+    ARTIFACTORY_DEBT_EXT: 0,
+    NEXUS_INT: 0,
+    NEXUS_EXT: 0,
+    NEXUS_DEBT_INT: 0,
+    NEXUS_DEBT_EXT: 0
+  }
+
+  libs.forEach(lib => {
+    const method = lib.resolutionMethod?.toUpperCase()
+    const isInternal = lib.libraryType === 'internal' || lib.isInternal
+    const isDebt = lib.isFromDebtRepo === true
+
+    // Maven Central : CHECKSUM, MANIFEST ou KNOWN_CONFIG pour libs externes sans dette
+    if (method === 'CHECKSUM' || method === 'MANIFEST') {
+      stats.MAVEN_CENTRAL_EXT++
+    }
+    // KNOWN_CONFIG : classifier selon libraryType et isFromDebtRepo
+    else if (method === 'KNOWN_CONFIG') {
+      if (isInternal) {
+        // Interne connu → repo interne (Artifactory ou Nexus selon contexte)
+        if (useNexus) {
+          if (isDebt) stats.NEXUS_DEBT_INT++
+          else stats.NEXUS_INT++
+        } else if (useArtifactory) {
+          if (isDebt) stats.ARTIFACTORY_DEBT_INT++
+          else stats.ARTIFACTORY_INT++
+        }
+      } else {
+        // Externe connu → Maven Central
+        stats.MAVEN_CENTRAL_EXT++
+      }
+    }
+    // Artifactory
+    else if (method === 'ARTIFACTORY' || method === 'ARTIFACTORY_CHECKSUM') {
+      if (isDebt) {
+        if (isInternal) stats.ARTIFACTORY_DEBT_INT++
+        else stats.ARTIFACTORY_DEBT_EXT++
+      } else {
+        if (isInternal) stats.ARTIFACTORY_INT++
+        else stats.ARTIFACTORY_EXT++
+      }
+    }
+    // Nexus
+    else if (method === 'NEXUS' || method === 'NEXUS_CHECKSUM') {
+      if (isDebt) {
+        if (isInternal) stats.NEXUS_DEBT_INT++
+        else stats.NEXUS_DEBT_EXT++
+      } else {
+        if (isInternal) stats.NEXUS_INT++
+        else stats.NEXUS_EXT++
+      }
+    }
+  })
+
+  return stats
+})
+
+// Configuration des catégories de localisation
+const locationConfig = computed(() => {
+  const useArtifactory = isArtifactoryEnabled.value
+  const useNexus = isNexusEnabled.value
+
+  // Catégories avec labels sur 2 lignes, couleurs
+  const categories = [
+    { key: 'MAVEN_CENTRAL_EXT', label: ['Maven Central', 'Externe'], color: '#3b82f6' }
+  ]
+
+  if (useArtifactory) {
+    categories.push(
+      { key: 'ARTIFACTORY_INT', label: ['Artifactory', 'Interne'], color: '#22c55e' },
+      { key: 'ARTIFACTORY_EXT', label: ['Artifactory', 'Externe'], color: '#3b82f6' },
+      { key: 'ARTIFACTORY_DEBT_INT', label: ['Artifactory Dettes', 'Interne'], color: '#f97316' },
+      { key: 'ARTIFACTORY_DEBT_EXT', label: ['Artifactory Dettes', 'Externe'], color: '#ef4444' }
+    )
+  } else if (useNexus) {
+    categories.push(
+      { key: 'NEXUS_INT', label: ['Nexus', 'Interne'], color: '#22c55e' },
+      { key: 'NEXUS_EXT', label: ['Nexus', 'Externe'], color: '#3b82f6' },
+      { key: 'NEXUS_DEBT_INT', label: ['Nexus Dettes', 'Interne'], color: '#f97316' },
+      { key: 'NEXUS_DEBT_EXT', label: ['Nexus Dettes', 'Externe'], color: '#ef4444' }
+    )
+  }
+
+  return categories
+})
+
+const locationLabels = computed(() => {
+  return locationConfig.value
+    .filter(cat => libraryLocationStats.value[cat.key] > 0)
+    .map(cat => cat.label)
+})
+
+const locationData = computed(() => {
+  return locationConfig.value
+    .filter(cat => libraryLocationStats.value[cat.key] > 0)
+    .map(cat => libraryLocationStats.value[cat.key])
+})
+
+const locationColors = computed(() => {
+  return locationConfig.value
+    .filter(cat => libraryLocationStats.value[cat.key] > 0)
+    .map(cat => cat.color)
 })
 
 // Radar chart data

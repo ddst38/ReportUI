@@ -46,6 +46,10 @@ const props = defineProps({
     type: String,
     default: '#3b82f6'
   },
+  colors: {
+    type: Array,
+    default: null
+  },
   horizontal: {
     type: Boolean,
     default: false
@@ -58,8 +62,8 @@ const chartData = computed(() => ({
   labels: props.labels,
   datasets: [{
     data: props.data,
-    backgroundColor: props.color,
-    borderColor: props.color,
+    backgroundColor: props.colors || props.color,
+    borderColor: props.colors || props.color,
     borderWidth: 1,
     borderRadius: 4,
     barThickness: 20
