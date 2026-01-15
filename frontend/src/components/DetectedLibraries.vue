@@ -6,6 +6,13 @@
         <!-- Search -->
         <input v-model="search" type="text" placeholder="Rechercher..."
                class="text-xs border border-gray-300 rounded px-2 py-1 w-32 focus:outline-none focus:border-primary-500">
+        <!-- Source filter -->
+        <select v-model="sourceFilter" class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-primary-500">
+          <option value="">Toutes sources</option>
+          <option value="cadre">Cadre</option>
+          <option value="ear">Extrait EAR</option>
+          <option value="lib">Répertoire lib</option>
+        </select>
         <!-- Category filter -->
         <select v-model="categoryFilter" class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-primary-500">
           <option value="">Toutes catégories</option>
@@ -48,7 +55,11 @@
             </td>
             <td class="text-right text-gray-500">{{ formatSize(jar.size) }}</td>
             <td class="text-sm text-gray-600">
-              <span v-if="jar.source?.startsWith('Extrait')" class="italic">{{ jar.source }}</span>
+              <span v-if="jar.cadreTag" class="flex items-center gap-1">
+                <span class="badge bg-indigo-100 text-indigo-800">Cadre</span>
+                <span class="font-mono text-xs text-indigo-600">{{ jar.cadreTag }}</span>
+              </span>
+              <span v-else-if="jar.source?.startsWith('Extrait')" class="italic">{{ jar.source }}</span>
               <span v-else>{{ jar.source }}</span>
             </td>
             <td>
@@ -72,6 +83,7 @@ const props = defineProps({
 })
 
 const search = ref('')
+const sourceFilter = ref('')
 const categoryFilter = ref('')
 const sortKey = ref('name')
 const sortOrder = ref('asc')
@@ -83,6 +95,16 @@ const filteredJars = computed(() => {
   if (search.value) {
     const q = search.value.toLowerCase()
     result = result.filter(jar => jar.name?.toLowerCase().includes(q))
+  }
+
+  // Source filter
+  if (sourceFilter.value) {
+    result = result.filter(jar => {
+      if (sourceFilter.value === 'cadre') return jar.cadreTag != null
+      if (sourceFilter.value === 'ear') return jar.source?.startsWith('Extrait')
+      if (sourceFilter.value === 'lib') return !jar.cadreTag && !jar.source?.startsWith('Extrait')
+      return true
+    })
   }
 
   // Category filter

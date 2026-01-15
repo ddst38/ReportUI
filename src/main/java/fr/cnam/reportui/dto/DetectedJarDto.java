@@ -17,5 +17,8 @@ public record DetectedJarDto(
     String source,
 
     @Schema(description = "Catégorie du JAR", example = "MAIN")
-    String category
+    String category,
+
+    @Schema(description = "Tag du cadre si le JAR provient de libcadre", example = "PRF1190208A")
+    String cadreTag
 ) {}
