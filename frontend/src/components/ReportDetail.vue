@@ -156,6 +156,15 @@
               Analyse Sonar
             </span>
           </button>
+          <button v-if="hasOssData"
+                  @click="activeTab = 'oss'"
+                  :class="tabClass('oss')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full" :class="ossStatusDot"></span>
+              Analyse OSS
+            </span>
+          </button>
         </nav>
       </div>
 
@@ -243,6 +252,11 @@
       <div v-if="activeTab === 'sonar'">
         <SonarAnalysis :analysis="report.sonarAnalysis" />
       </div>
+
+      <!-- Tab: OSS Index Analysis -->
+      <div v-if="activeTab === 'oss'">
+        <OssAnalysis :analysis="report.ossAnalysis" />
+      </div>
     </div>
   </div>
 </template>
@@ -263,6 +277,7 @@ import DeployedLibrariesTab from '@/components/DeployedLibrariesTab.vue'
 import ReportIndicators from '@/components/ReportIndicators.vue'
 import JdepsAnalysis from '@/components/JdepsAnalysis.vue'
 import SonarAnalysis from '@/components/SonarAnalysis.vue'
+import OssAnalysis from '@/components/OssAnalysis.vue'
 
 const props = defineProps({
   id: {
@@ -328,6 +343,12 @@ const hasSonarData = computed(() => {
          report.value?.sonarAnalysis?.metrics != null
 })
 
+// OSS Index data
+const hasOssData = computed(() => {
+  return report.value?.ossAnalysis != null &&
+         report.value?.ossAnalysis?.totalDependencies > 0
+})
+
 // Artifactory/Nexus detection via byMethod
 const isArtifactoryEnabled = computed(() => {
   const byMethod = report.value?.statistics?.byMethod
@@ -366,6 +387,15 @@ const sonarStatusDot = computed(() => {
   if (sonar.qualityGateStatus === 'ERROR') return 'bg-red-600'
   if (sonar.qualityGateStatus === 'WARN') return 'bg-orange-500'
   if (sonar.criticalIssuesCount > 0) return 'bg-orange-500'
+  return 'bg-green-500'
+})
+
+const ossStatusDot = computed(() => {
+  const oss = report.value?.ossAnalysis
+  if (!oss) return 'bg-gray-400'
+  if (oss.overallStatus === 'CRITICAL') return 'bg-red-600'
+  if (oss.overallStatus === 'RISKY') return 'bg-orange-500'
+  if (oss.overallStatus === 'MONITOR') return 'bg-yellow-500'
   return 'bg-green-500'
 })
 

@@ -47,5 +47,8 @@ public record ProjectReportDto(
     JdepsAnalysisDto jdepsAnalysis,
 
     @Schema(description = "Résultat de l'analyse SonarQube")
-    SonarAnalysisDto sonarAnalysis
+    SonarAnalysisDto sonarAnalysis,
+
+    @Schema(description = "Résultat de l'analyse OSS Index (viabilité)")
+    OssAnalysisDto ossAnalysis
 ) {}

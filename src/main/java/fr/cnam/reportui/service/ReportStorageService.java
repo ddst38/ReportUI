@@ -63,7 +63,8 @@ public class ReportStorageService {
             request.cveSummary(),
             request.deploymentInfo(),
             request.jdepsAnalysis(),
-            request.sonarAnalysis()
+            request.sonarAnalysis(),
+            request.ossAnalysis()
         );
 
         Path file = storageDir.resolve(id + ".json");
