@@ -147,6 +147,15 @@
               Analyse Structurelle
             </span>
           </button>
+          <button v-if="hasSonarData"
+                  @click="activeTab = 'sonar'"
+                  :class="tabClass('sonar')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full" :class="sonarStatusDot"></span>
+              Analyse Sonar
+            </span>
+          </button>
         </nav>
       </div>
 
@@ -229,6 +238,11 @@
       <div v-if="activeTab === 'jdeps'">
         <JdepsAnalysis :analysis="report.jdepsAnalysis" />
       </div>
+
+      <!-- Tab: Sonar Analysis -->
+      <div v-if="activeTab === 'sonar'">
+        <SonarAnalysis :analysis="report.sonarAnalysis" />
+      </div>
     </div>
   </div>
 </template>
@@ -248,6 +262,7 @@ import CveStatsTab from '@/components/CveStatsTab.vue'
 import DeployedLibrariesTab from '@/components/DeployedLibrariesTab.vue'
 import ReportIndicators from '@/components/ReportIndicators.vue'
 import JdepsAnalysis from '@/components/JdepsAnalysis.vue'
+import SonarAnalysis from '@/components/SonarAnalysis.vue'
 
 const props = defineProps({
   id: {
@@ -307,6 +322,12 @@ const hasJdepsData = computed(() => {
          report.value?.jdepsAnalysis?.summary != null
 })
 
+// Sonar data
+const hasSonarData = computed(() => {
+  return report.value?.sonarAnalysis != null &&
+         report.value?.sonarAnalysis?.metrics != null
+})
+
 // Artifactory/Nexus detection via byMethod
 const isArtifactoryEnabled = computed(() => {
   const byMethod = report.value?.statistics?.byMethod
@@ -336,6 +357,15 @@ const jdepsStatusDot = computed(() => {
   const jdeps = report.value?.jdepsAnalysis?.summary
   if (!jdeps) return 'bg-gray-400'
   if (jdeps.cycleCount > 0 || jdeps.jdkInternalCount > 0) return 'bg-orange-500'
+  return 'bg-green-500'
+})
+
+const sonarStatusDot = computed(() => {
+  const sonar = report.value?.sonarAnalysis
+  if (!sonar) return 'bg-gray-400'
+  if (sonar.qualityGateStatus === 'ERROR') return 'bg-red-600'
+  if (sonar.qualityGateStatus === 'WARN') return 'bg-orange-500'
+  if (sonar.criticalIssuesCount > 0) return 'bg-orange-500'
   return 'bg-green-500'
 })
 

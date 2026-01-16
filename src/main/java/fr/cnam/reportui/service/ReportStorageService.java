@@ -62,7 +62,8 @@ public class ReportStorageService {
             request.cveVulnerabilities(),
             request.cveSummary(),
             request.deploymentInfo(),
-            request.jdepsAnalysis()
+            request.jdepsAnalysis(),
+            request.sonarAnalysis()
         );
 
         Path file = storageDir.resolve(id + ".json");

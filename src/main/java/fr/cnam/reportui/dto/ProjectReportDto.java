@@ -44,5 +44,8 @@ public record ProjectReportDto(
     DeploymentInfoDto deploymentInfo,
 
     @Schema(description = "Résultat de l'analyse structurelle jdeps")
-    JdepsAnalysisDto jdepsAnalysis
+    JdepsAnalysisDto jdepsAnalysis,
+
+    @Schema(description = "Résultat de l'analyse SonarQube")
+    SonarAnalysisDto sonarAnalysis
 ) {}
