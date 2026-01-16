@@ -138,6 +138,15 @@
               Librairies déployées ({{ report.deploymentInfo?.deployedCount || 0 }})
             </span>
           </button>
+          <button v-if="hasJdepsData"
+                  @click="activeTab = 'jdeps'"
+                  :class="tabClass('jdeps')"
+                  class="py-2 px-1 text-sm font-medium border-b-2 transition-colors">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full" :class="jdepsStatusDot"></span>
+              Analyse Structurelle
+            </span>
+          </button>
         </nav>
       </div>
 
@@ -215,6 +224,11 @@
       <div v-if="activeTab === 'deployed'">
         <DeployedLibrariesTab :deploymentInfo="report.deploymentInfo" />
       </div>
+
+      <!-- Tab: Jdeps Analysis -->
+      <div v-if="activeTab === 'jdeps'">
+        <JdepsAnalysis :analysis="report.jdepsAnalysis" />
+      </div>
     </div>
   </div>
 </template>
@@ -233,6 +247,7 @@ import CveTable from '@/components/CveTable.vue'
 import CveStatsTab from '@/components/CveStatsTab.vue'
 import DeployedLibrariesTab from '@/components/DeployedLibrariesTab.vue'
 import ReportIndicators from '@/components/ReportIndicators.vue'
+import JdepsAnalysis from '@/components/JdepsAnalysis.vue'
 
 const props = defineProps({
   id: {
@@ -286,6 +301,12 @@ const hasDeploymentData = computed(() => {
          report.value?.deploymentInfo?.deployedLibraries?.length > 0
 })
 
+// Jdeps data
+const hasJdepsData = computed(() => {
+  return report.value?.jdepsAnalysis != null &&
+         report.value?.jdepsAnalysis?.summary != null
+})
+
 // Artifactory/Nexus detection via byMethod
 const isArtifactoryEnabled = computed(() => {
   const byMethod = report.value?.statistics?.byMethod
@@ -309,6 +330,13 @@ const cveSeverityDot = computed(() => {
     'NONE': 'bg-green-500'
   }
   return classes[severity] || 'bg-green-500'
+})
+
+const jdepsStatusDot = computed(() => {
+  const jdeps = report.value?.jdepsAnalysis?.summary
+  if (!jdeps) return 'bg-gray-400'
+  if (jdeps.cycleCount > 0 || jdeps.jdkInternalCount > 0) return 'bg-orange-500'
+  return 'bg-green-500'
 })
 
 // Stats grid class

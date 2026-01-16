@@ -38,5 +38,8 @@ public record CreateReportRequest(
     CveSummaryDto cveSummary,
 
     @Schema(description = "Informations de déploiement vers Artifactory/Nexus (mode REMOTE uniquement)")
-    DeploymentInfoDto deploymentInfo
+    DeploymentInfoDto deploymentInfo,
+
+    @Schema(description = "Résultat de l'analyse structurelle jdeps")
+    JdepsAnalysisDto jdepsAnalysis
 ) {}
