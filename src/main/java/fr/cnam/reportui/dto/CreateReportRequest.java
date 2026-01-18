@@ -13,6 +13,9 @@ public record CreateReportRequest(
     @Schema(description = "Nom du projet migré", example = "GMIC_J", required = true)
     String projectName,
 
+    @Schema(description = "Type de migration effectuée", example = "ant2maven")
+    String migrationType,
+
     @Schema(description = "Date et heure de la migration")
     LocalDateTime migrationDate,
 

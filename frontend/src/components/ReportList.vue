@@ -56,7 +56,12 @@
           <!-- Header -->
           <div class="flex items-start justify-between mb-3">
             <div>
-              <h3 class="font-semibold text-gray-900 text-sm">{{ report.projectName }}</h3>
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-gray-900 text-sm">{{ report.projectName }}</h3>
+                <span class="px-1.5 py-0.5 text-xxs rounded bg-indigo-100 text-indigo-700">
+                  {{ report.migrationType || 'ant2maven' }}
+                </span>
+              </div>
               <p class="text-xxs text-gray-500 mt-0.5">{{ formatDate(report.migrationDate) }}</p>
             </div>
             <button @click.stop="confirmDelete(report)"
@@ -139,6 +144,9 @@
               :artifactory-enabled="report.artifactoryEnabled"
               :nexus-enabled="report.nexusEnabled"
               :libraries-uploaded="report.deployedLibrariesCount || 0"
+              :jdeps-dependencies="report.jdepsDependencies"
+              :sonar-issues="report.sonarIssues"
+              :oss-analyzed="report.ossAnalyzed"
             />
           </div>
         </div>
@@ -166,7 +174,12 @@
               @click="goToReport(report.id)"
               class="cursor-pointer">
             <td class="px-4 py-3">
-              <div class="font-medium text-gray-900 text-sm">{{ report.projectName }}</div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-gray-900 text-sm">{{ report.projectName }}</span>
+                <span class="px-1.5 py-0.5 text-xxs rounded bg-indigo-100 text-indigo-700">
+                  {{ report.migrationType || 'ant2maven' }}
+                </span>
+              </div>
             </td>
             <td class="px-4 py-3 text-xs text-gray-500">
               {{ formatDate(report.migrationDate) }}
@@ -196,6 +209,9 @@
                 :artifactory-enabled="report.artifactoryEnabled"
                 :nexus-enabled="report.nexusEnabled"
                 :libraries-uploaded="report.deployedLibrariesCount || 0"
+                :jdeps-dependencies="report.jdepsDependencies"
+                :sonar-issues="report.sonarIssues"
+                :oss-analyzed="report.ossAnalyzed"
               />
             </td>
             <td class="px-4 py-3 text-right">

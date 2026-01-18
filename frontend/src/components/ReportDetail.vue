@@ -36,7 +36,12 @@
       <div :class="headerClass" class="rounded-lg shadow p-4 mb-6">
         <div class="flex items-start justify-between">
           <div>
-            <h1 class="text-xl font-bold text-gray-900">{{ report.projectName }}</h1>
+            <div class="flex items-center gap-3">
+              <h1 class="text-xl font-bold text-gray-900">{{ report.projectName }}</h1>
+              <span class="px-2 py-0.5 text-xs rounded bg-indigo-100 text-indigo-700">
+                {{ report.migrationType || 'ant2maven' }}
+              </span>
+            </div>
             <p class="text-sm text-gray-500 mt-1">Migration du {{ formatDate(report.migrationDate) }}</p>
             <!-- Indicateurs -->
             <div class="mt-2">
@@ -47,6 +52,9 @@
                 :artifactory-enabled="isArtifactoryEnabled"
                 :nexus-enabled="isNexusEnabled"
                 :libraries-uploaded="report.deploymentInfo?.deployedCount || 0"
+                :jdeps-dependencies="report.jdepsAnalysis?.summary?.totalDependencies"
+                :sonar-issues="report.sonarAnalysis?.summary?.totalIssues"
+                :oss-analyzed="report.ossAnalysis?.summary?.totalAnalyzed"
               />
             </div>
           </div>
@@ -61,43 +69,43 @@
 
       <!-- Stats cards - Dynamic -->
       <div class="grid gap-4 mb-6" :class="statsGridClass">
-        <div class="stat-card">
-          <div class="stat-value">{{ report.statistics.totalJars }}</div>
-          <div class="stat-label">JARs détectés</div>
+        <div class="stat-card bg-green-100">
+          <div class="stat-value text-green-700">{{ report.statistics.totalJars }}</div>
+          <div class="stat-label text-green-600">JARs détectés</div>
         </div>
         <!-- Mode standard -->
-        <div v-if="!report.statistics.hasMigrationRepo" class="stat-card bg-green-50">
-          <div class="stat-value text-green-600">{{ report.statistics.resolved }}</div>
-          <div class="stat-label">Résolus</div>
+        <div v-if="!report.statistics.hasMigrationRepo" class="stat-card bg-green-200">
+          <div class="stat-value text-green-800">{{ report.statistics.resolved }}</div>
+          <div class="stat-label text-green-700">Résolus</div>
         </div>
         <!-- Mode migration-java-dette -->
-        <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-green-50">
-          <div class="stat-value text-green-600">{{ report.statistics.resolvedStd || 0 }}</div>
-          <div class="stat-label">Rés. STD</div>
+        <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-green-200">
+          <div class="stat-value text-green-800">{{ report.statistics.resolvedStd || 0 }}</div>
+          <div class="stat-label text-green-700">Rés. STD</div>
         </div>
-        <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-lime-50">
+        <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-lime-100">
           <div class="stat-value text-lime-700">{{ report.statistics.resolvedInt || 0 }}</div>
-          <div class="stat-label">Rés. INT</div>
+          <div class="stat-label text-lime-600">Rés. INT</div>
         </div>
         <div v-if="report.statistics.hasMigrationRepo" class="stat-card bg-red-100">
           <div class="stat-value text-red-700">{{ report.statistics.resolvedExt || 0 }}</div>
-          <div class="stat-label">Rés. EXT</div>
+          <div class="stat-label text-red-600">Rés. EXT</div>
         </div>
-        <div class="stat-card bg-yellow-50">
-          <div class="stat-value text-yellow-600">{{ report.statistics.unresolvedInternal || 0 }}</div>
-          <div class="stat-label">Non rés. Interne</div>
+        <div class="stat-card bg-orange-100">
+          <div class="stat-value text-orange-700">{{ report.statistics.unresolvedInternal || 0 }}</div>
+          <div class="stat-label text-orange-600">Non rés. Interne</div>
         </div>
-        <div class="stat-card bg-red-50">
-          <div class="stat-value text-red-600">{{ report.statistics.unresolvedExternal || 0 }}</div>
-          <div class="stat-label">Non rés. Externe</div>
+        <div class="stat-card bg-red-100">
+          <div class="stat-value text-red-700">{{ report.statistics.unresolvedExternal || 0 }}</div>
+          <div class="stat-label text-red-600">Non rés. Externe</div>
         </div>
-        <div v-if="report.statistics.providedAutoFix > 0" class="stat-card bg-purple-50">
-          <div class="stat-value text-purple-600">{{ report.statistics.providedAutoFix }}</div>
-          <div class="stat-label">Provided</div>
+        <div v-if="report.statistics.providedAutoFix > 0" class="stat-card bg-purple-100">
+          <div class="stat-value text-purple-700">{{ report.statistics.providedAutoFix }}</div>
+          <div class="stat-label text-purple-600">Provided</div>
         </div>
-        <div v-if="report.statistics.missingCount > 0" class="stat-card bg-red-100">
-          <div class="stat-value text-red-700">{{ report.statistics.missingCount }}</div>
-          <div class="stat-label">Manquants</div>
+        <div v-if="report.statistics.missingCount > 0" class="stat-card bg-red-200">
+          <div class="stat-value text-red-800">{{ report.statistics.missingCount }}</div>
+          <div class="stat-label text-red-700">Manquants</div>
         </div>
       </div>
 

@@ -16,6 +16,9 @@ public record ReportSummaryDto(
     @Schema(description = "Nom du projet migré", example = "GMIC_J")
     String projectName,
 
+    @Schema(description = "Type de migration effectuée", example = "ant2maven")
+    String migrationType,
+
     @Schema(description = "Date et heure de la migration")
     LocalDateTime migrationDate,
 
@@ -74,7 +77,16 @@ public record ReportSummaryDto(
     Integer deployedLibrariesCount,
 
     @Schema(description = "Répartition par localisation source")
-    Map<String, Integer> byLocation
+    Map<String, Integer> byLocation,
+
+    @Schema(description = "Nombre de dépendances analysées par jdeps")
+    Integer jdepsDependencies,
+
+    @Schema(description = "Nombre d'issues Sonar détectées")
+    Integer sonarIssues,
+
+    @Schema(description = "Nombre de dépendances analysées par OSS Index")
+    Integer ossAnalyzed
 ) {
     /**
      * Crée un résumé à partir d'un rapport complet.
@@ -97,9 +109,26 @@ public record ReportSummaryDto(
             deployedCount = report.deploymentInfo().deployedCount();
         }
 
+        // Indicateurs d'analyse
+        Integer jdepsDeps = null;
+        if (report.jdepsAnalysis() != null && report.jdepsAnalysis().summary() != null) {
+            jdepsDeps = report.jdepsAnalysis().summary().totalDependencies();
+        }
+
+        Integer sonarIssues = null;
+        if (report.sonarAnalysis() != null) {
+            sonarIssues = report.sonarAnalysis().totalIssues();
+        }
+
+        Integer ossAnalyzed = null;
+        if (report.ossAnalysis() != null) {
+            ossAnalyzed = report.ossAnalysis().totalDependencies();
+        }
+
         return new ReportSummaryDto(
             report.id(),
             report.projectName(),
+            report.migrationType() != null ? report.migrationType() : "ant2maven",
             report.migrationDate(),
             report.statistics().totalJars(),
             report.statistics().resolved(),
@@ -119,7 +148,10 @@ public record ReportSummaryDto(
             artifactory,
             nexus,
             deployedCount,
-            report.statistics().byLocation()
+            report.statistics().byLocation(),
+            jdepsDeps,
+            sonarIssues,
+            ossAnalyzed
         );
     }
 

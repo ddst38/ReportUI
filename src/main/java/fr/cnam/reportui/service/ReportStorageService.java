@@ -53,6 +53,7 @@ public class ReportStorageService {
         ProjectReportDto report = new ProjectReportDto(
             id,
             request.projectName(),
+            request.migrationType() != null ? request.migrationType() : "ant2maven",
             migrationDate,
             request.statistics(),
             request.libraries(),
