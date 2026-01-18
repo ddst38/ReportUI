@@ -10,11 +10,31 @@ Interface web centralisée pour visualiser les rapports de migration ANT vers Ma
 
 ## Fonctionnalités
 
+### Gestion des rapports
 - Réception des rapports de migration via API REST (POST `/api/reports`)
-- Visualisation en liste des projets migrés avec statistiques
-- Vue détaillée par projet : graphiques, tableaux, conflits de versions
-- Export PDF des rapports
+- Stockage persistant en fichiers JSON
 - Suppression des rapports
+
+### Liste des rapports
+- Affichage en cards avec statistiques clés (JARs, résolus, non résolus)
+- Badge du type de migration (ant2maven, toplink-to-jpa...)
+- Indicateurs visuels pour les analyses effectuées :
+  - **jdeps** : Icône bleue si analyse structurelle présente
+  - **Sonar** : Badge "S" cyan si analyse qualité présente
+  - **OSS** : Icône bouclier violet si analyse viabilité présente
+- Indicateurs existants : compilation, CVE, Artifactory (A), Nexus (N), auto-fix
+
+### Vue détaillée
+- Statistiques colorées par catégorie :
+  - JARs détectés : vert clair
+  - Résolus : vert
+  - Non résolus internes : orange
+  - Non résolus externes : rouge
+  - Provided : violet
+- Graphiques interactifs (donut, barres, radar)
+- Tableaux des bibliothèques avec filtres et tri
+- Détection des conflits de versions
+- Export PDF du rapport
 
 ## Structure du projet
 
@@ -92,6 +112,37 @@ java -jar ant2maven-1.0.0-SNAPSHOT.jar \
   -v
 ```
 
+### Données envoyées par ant2maven
+
+| Champ | Description |
+|-------|-------------|
+| `migrationType` | Type de migration (ant2maven, toplink-to-jpa...) |
+| `statistics` | Statistiques de résolution (total, résolus, non résolus) |
+| `cveSummary` | Résumé des vulnérabilités CVE (si `--cve-check`) |
+| `jdepsAnalysis` | Résultat analyse jdeps (si `--jdeps-analysis`) |
+| `sonarAnalysis` | Résultat analyse SonarQube (si `--sonar-analysis`) |
+| `ossAnalysis` | Résultat analyse OSS Index (si `--oss-analysis`) |
+| `deploymentInfo` | Informations de déploiement (mode, cible) |
+
+### Indicateurs visuels
+
+L'interface affiche des icônes pour indiquer les analyses effectuées :
+
+| Indicateur | Condition d'affichage | Couleur |
+|------------|----------------------|---------|
+| Engrenage | Auto-fix activé | Violet |
+| Maison | Mode LOCAL | Bleu |
+| Nuage | Mode REMOTE | Bleu |
+| Check vert | Compilation réussie | Vert |
+| Warning | Compilation échouée | Rouge |
+| Bouclier | CVE détectées | Rouge/Orange/Jaune selon sévérité |
+| "A" | Artifactory utilisé | Orange |
+| "N" | Nexus utilisé | Bleu |
+| Flèche haut | Librairies uploadées | Vert |
+| Layers | Analyse jdeps présente | Bleu |
+| "S" | Analyse Sonar présente | Cyan |
+| Bouclier check | Analyse OSS présente | Violet |
+
 ## Commandes de référence
 
 ### ant2maven avec export vers report-ui
@@ -115,6 +166,45 @@ java -jar ant2maven-1.0.0-SNAPSHOT.jar \
   --report-ui-url http://localhost:8090 \
   -v
 ```
+
+### Migration complète avec toutes les analyses
+
+Cette commande active toutes les fonctionnalités et envoie le rapport complet à report-ui :
+
+```bash
+java -jar ant2maven-1.0.0-SNAPSHOT.jar \
+  -p ./PRF2_A \
+  -o ./PRF2_A-maven \
+  --nexus-url http://localhost:8084 \
+  --nexus-user jenkins \
+  --nexus-password jenkins \
+  --deploy-mode REMOTE \
+  --remote-target NEXUS \
+  --deploy-repo migration-java-dette \
+  --auto-fix \
+  --known-artifacts ./conf-Ant2maven/known-artifacts.yaml \
+  --report-ui-url http://localhost:8090 \
+  --cve-check \
+  --nvd-api-key votre-cle-nvd \
+  --scan-cadre \
+  --jdeps-analysis \
+  --sonar-analysis \
+  --sonar-url http://localhost:9000 \
+  --sonar-token squ_xxxx \
+  --oss-analysis \
+  --ossindex-user user@example.com \
+  --ossindex-token token-oss \
+  -v
+```
+
+Avec cette commande, report-ui affichera :
+- Badge "ant2maven" comme type de migration
+- Icône jdeps (analyse structurelle active)
+- Badge "S" (analyse SonarQube active)
+- Icône OSS (analyse viabilité active)
+- Statistiques CVE si vulnérabilités détectées
+- Badge "N" (Nexus utilisé)
+- Icône upload (librairies déployées en REMOTE)
 
 ### report-ui
 
